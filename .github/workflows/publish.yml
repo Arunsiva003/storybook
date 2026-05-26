@@ -22,10 +22,7 @@ env:
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1
 
-permissions:
-  id-token: write
-  contents: write
-  pull-requests: write
+permissions: {}
 
 concurrency:
   # Group concurrent runs based on the event type:
@@ -44,12 +41,17 @@ jobs:
       (github.ref_name == 'latest-release' || github.ref_name == 'next-release') &&
       contains(github.event.head_commit.message, '[skip ci]') != true
     environment: Release
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write  # required for npm provenance via yarn release:publish
     defaults:
       run:
         working-directory: scripts
     steps:
       - name: Checkout ${{ github.ref_name }}
-        uses: actions/checkout@v4
+        # zizmor: ignore[artipacked]  # git push origin runs at multiple steps using persisted GH_TOKEN
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 100
           token: ${{ secrets.GH_TOKEN }}
@@ -186,7 +188,7 @@ jobs:
 
       - name: Create Sentry release
         if: steps.publish-needed.outputs.published == 'false'
-        uses: getsentry/action-release@v3
+        uses: getsentry/action-release@5657c9e888b4e2cc85f4d29143ea4131fde4a73a # v3.6.0
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
@@ -214,6 +216,10 @@ jobs:
       ) &&
       contains(github.event.head_commit.message, '[skip ci]') != true
     environment: Release
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write  # required for npm provenance via yarn release:publish
     steps:
       - name: Fail if triggering actor is not administrator
         uses: prince-chrismc/check-actor-permissions-action@87c6d9b36c730377858fd9719fbbac1b58fa678d
@@ -240,11 +246,12 @@ jobs:
           echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           repository: ${{ steps.info.outputs.isFork == 'true' && steps.info.outputs.repository || null }}
           ref: ${{ steps.info.outputs.sha }}
           token: ${{ secrets.GH_TOKEN }}
+          persist-credentials: false
 
       - name: Setup Node.js and Install Dependencies
         uses: ./.github/actions/setup-node-and-install

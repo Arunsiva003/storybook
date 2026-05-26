@@ -7,15 +7,20 @@ on:
 env:
   NODE_OPTIONS: '--max_old_space_size=4096'
 
+permissions: {}
+
 jobs:
   check:
     name: Core Type Checking
     if: github.repository_owner != 'storybookjs'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 2
+          persist-credentials: false
 
       - name: Setup Node.js and Install Dependencies
         uses: ./.github/actions/setup-node-and-install
@@ -29,10 +34,13 @@ jobs:
     name: Core Formatting
     if: github.repository_owner != 'storybookjs'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 2
+          persist-credentials: false
 
       - name: Setup Node.js and Install Dependencies
         uses: ./.github/actions/setup-node-and-install
@@ -49,10 +57,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Core Unit Tests, ${{ matrix.os }}
     if: github.repository_owner != 'storybookjs'
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 2
+          persist-credentials: false
 
       - name: Setup Node.js and Install Dependencies
         uses: ./.github/actions/setup-node-and-install
